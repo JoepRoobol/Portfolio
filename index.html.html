@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Joep’s Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1b1f3b;--frame:#2a2f57;--ink:#202020;--paper:#fffdf2;--accent:#e05a47;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:#fff;font-family:"Press Start 2P",ui-monospace,Menlo,monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:env(safe-area-inset-top,0px) 12px env(safe-area-inset-bottom,0px)}
+h1{font-size:clamp(10px,3vw,15px);margin:0;letter-spacing:1px;text-align:center}
+.hint{font-size:clamp(6px,1.6vw,9px);color:#aab;text-align:center;line-height:1.8;margin:0}
+.stage{container-type:inline-size;position:relative;width:min(100%,520px);width:min(100%,520px,max(260px,calc((100dvh - 270px)*.842)));aspect-ratio:256/304;border:8px solid #111;border-radius:14px;background:#78c850;overflow:hidden;box-shadow:0 0 0 4px var(--frame)}
+canvas{width:100%;height:100%;display:block;image-rendering:pixelated;cursor:pointer}
+.lab{position:absolute;transform:translate(-50%,-50%);background:var(--paper);color:var(--ink);border:2px solid var(--ink);padding:.45em .55em;font-size:clamp(5px,1.7cqw,10px);line-height:1.4;max-width:17.5cqw;text-align:center;pointer-events:none;border-radius:3px}
+.lab.nw{white-space:nowrap;max-width:none}
+.dlg{position:absolute;left:3%;right:3%;bottom:3%;max-height:72%;overflow:auto;background:var(--paper);color:var(--ink);border:4px solid var(--ink);border-radius:10px;box-shadow:inset 0 0 0 3px #fff,0 0 0 3px #888;padding:1.2em 1.4em;font-size:clamp(7px,2.4cqw,12px);line-height:1.9;display:none}
+.dlg.on{display:block}
+.dlg h2{font-size:1.15em;margin:0 0 .7em;color:var(--accent)}
+.dlg p{margin:0 0 .9em;min-height:3.8em}
+.btns{display:flex;flex-wrap:wrap;gap:.7em}
+.btns a,.btns button{font:inherit;font-size:.9em;color:var(--ink);background:#fff;border:3px solid var(--ink);border-radius:6px;padding:.6em .9em;cursor:pointer;text-decoration:none}
+.btns a:hover,.btns button:hover{background:#ffe27a}
+.btns a::before{content:"▶ "}
+.pad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,48px);gap:6px}
+.pad button{font:inherit;font-size:16px;background:var(--frame);color:#fff;border:3px solid #111;border-radius:8px;touch-action:none}
+.pad button:active{background:var(--accent)}
+.pad .u{grid-column:2}.pad .l{grid-row:2;grid-column:1}.pad .d{grid-row:2;grid-column:2}.pad .r{grid-row:2;grid-column:3}
+@media (hover:hover) and (pointer:fine){.pad{display:none}}
+</style>
+</head>
+<body>
+<h1>JOEP’S PORTFOLIO</h1>
+<div class="stage" id="stage">
+  <canvas id="c" width="256" height="304" aria-label="Plattegrond van het portfolio"></canvas>
+  <div class="dlg" id="dlg" role="dialog" aria-live="polite"><h2 id="dt"></h2><p id="dx"></p><div class="btns" id="db"></div></div>
+</div>
+<p class="hint">Loop met pijltjes of WASD, of klik/tik op een gebouw</p>
+<div class="pad"><button class="u" data-k="up" aria-label="Omhoog">▲</button><button class="l" data-k="left" aria-label="Links">◀</button><button class="d" data-k="down" aria-label="Omlaag">▼</button><button class="r" data-k="right" aria-label="Rechts">▶</button></div>
+
+<script>
+const T=16,W=16,H=19,cv=document.getElementById("c"),ctx=cv.getContext("2d"),stage=document.getElementById("stage");
+const FR="https://joeproobol.framer.website/",LI="https://www.linkedin.com/in/joep-roobol-16b369295/",IG="https://www.instagram.com/joep._05/";
+const B=[
+ {id:"over",n:"Over mij",x:2,y:1,w:5,h:3,c:"#e2763a",t:"Hoi! Ik ben Joep Roobol, 21 jaar en student Communicatie & Multimedia Design. Nederlands is mijn moedertaal en Engels spreek ik vloeiend. Ik los graag problemen op waar jij op vastzit.",l:[["Instagram",IG],["LinkedIn",LI]]},
+ {id:"cases",n:"Case study’s",x:7,y:6,c:"#2f6fd6",t:"Hier vind je mijn case studies. Kies er een om het hele verhaal te lezen.",l:[["Rotterdampartners",FR+"rotterdampartners"],["Poeslief",FR+"poeslief"],["Villa Zebra",FR+"villa-zebra"]]},
+ {id:"tools",n:"Tools",x:2,y:11,c:"#2f6fd6",t:"Hier staat mijn gereedschap: Framer, Figma, InDesign, Premiere Pro, Photoshop en Notion.",l:[]},
+ {id:"siss",n:"SISS",x:11,y:11,c:"#2f6fd6",t:"Mijn werk voor SISS. Kies een project.",l:[["360 tour",FR+"siss-school-tour"],["Visuele communicatie",FR+"siss--visuele-communicatie"]]},
+ {id:"kl",n:"Kuala Lumpur",x:7,y:17,w:2,h:2,boat:1,dr:[[7,17],[8,17]],t:"Zes maanden in Kuala Lumpur. Stap aan boord en bekijk de foto’s en verhalen van mijn tijd in het buitenland.",l:[["Bekijk de reis",FR+"6-months-abroad"]]},
+ {id:"mail",n:"Contact",x:13,y:3,w:1,h:1,mail:1,t:"Wil je samenwerken of gewoon hallo zeggen? Stuur me een bericht!",l:[["LinkedIn",LI],["Instagram",IG]]},
+ {id:"n1",n:"Dorpeling",x:2,y:7,w:1,h:1,npc:["#f2b8d0","#8e44ad"],t:"Hoi! Loop naar een huis toe en ik laat je zien wat Joep heeft gemaakt.",l:[]},
+ {id:"n2",n:"Visser",x:12,y:6,w:1,h:1,npc:["#444","#27ae60"],t:"Tip: de boot onderaan brengt je naar Kuala Lumpur.",l:[]}
+];
+B.forEach(b=>{b.w=b.w||3;b.h=b.h||3});
+const DECO=[[1,4,"sign"],[12,8,"bench"],[5,12,"bush"],[5,13,"bush"],[10,12,"bush"],[10,13,"bush"]];
+const P=new Set(),addP=(x,y)=>P.add(x+","+y),isP=(x,y)=>P.has(x+","+y);
+addP(4,4);for(let x=4;x<=11;x++)addP(x,5);for(let y=0;y<=5;y++)addP(11,y);
+for(let y=5;y<=9;y++){addP(6,y);addP(10,y)}for(let x=6;x<=10;x++)addP(x,9);
+for(let y=9;y<=14;y++)addP(8,y);for(let x=2;x<=13;x++)addP(x,14);
+const blocked=Array.from({length:H},(_,y)=>Array.from({length:W},(_,x)=>x==0||x==W-1||y==0||y>=15));
+for(let y=1;y<=10;y++)blocked[y][14]=true;
+[[15,7],[15,8],[16,7],[16,8]].forEach(([y,x])=>blocked[y][x]=false);
+const door={};
+B.forEach(b=>{for(let i=0;i<b.w;i++)for(let j=0;j<b.h;j++)blocked[b.y+j][b.x+i]=true;
+ (b.dr||[[b.x+(b.w>>1),b.y+b.h-1]]).forEach(([x,y])=>door[x+","+y]=b)});
+DECO.forEach(([x,y])=>blocked[y][x]=true);
+const tileB=(x,y)=>B.find(b=>x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h);
+
+/* labels */
+B.forEach(b=>{if(b.npc)return;const d=document.createElement("div");d.className="lab";d.textContent=b.n;
+ if(b.boat){d.classList.add("nw");d.style.left=(b.x+b.w+.2)/W*100+"%";d.style.top=(b.y+1)/H*100+"%";d.style.transform="translate(0,-50%)"}
+ else if(b.mail){d.classList.add("nw");d.style.left=(b.x+.5)/W*100+"%";d.style.top=(b.y-.1)/H*100+"%";d.style.transform="translate(-50%,-100%)"}
+ else{d.style.left=(b.x+b.w/2)/W*100+"%";d.style.top=(b.y+.85)/H*100+"%"}
+ stage.appendChild(d)});
+
+/* static map */
+const map=document.createElement("canvas");map.width=256;map.height=304;const m=map.getContext("2d");
+const R=(c,x,y,w,h)=>{m.fillStyle=c;m.fillRect(x,y,w,h)};
+const tri=(a,b,c,d,e,f)=>{m.beginPath();m.moveTo(a,b);m.lineTo(c,d);m.lineTo(e,f);m.fill()};
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){R((x+y)%2?"#7ccf5a":"#74c653",x*T,y*T,T,T);
+ if((x*5+y*3)%7==0)R("#5fb243",x*T+4,y*T+9,3,1);
+ if((x*7+y*13)%9==0&&!isP(x,y)&&!blocked[y][x]){R("#fff",x*T+4,y*T+5,2,2);R("#fff",x*T+9,y*T+8,2,2);R("#f4d03f",x*T+5,y*T+6,1,1)}}
+for(let y=0;y<15;y++)for(let x=0;x<W;x++){if(!isP(x,y))continue;
+ R("#e6d29a",x*T,y*T,T,T);
+ [[0,-1,0,0,T,2],[0,1,0,T-2,T,2],[-1,0,0,0,2,T],[1,0,T-2,0,2,T]].forEach(([dx,dy,ox,oy,w,h])=>{if(!isP(x+dx,y+dy))R("#cdb877",x*T+ox,y*T+oy,w,h)});
+ if((x*3+y)%4==0)R("#d4c086",x*T+6,y*T+7,2,1)}
+const pine=(x,y)=>{R("#4f9e45",x*T,y*T,T,T);m.fillStyle="#1d6a3b";tri(x*T+8,y*T+1,x*T+1,y*T+8,x*T+15,y*T+8);tri(x*T+8,y*T+4,x*T,y*T+12,x*T+16,y*T+12);
+ m.fillStyle="#2c8a4c";tri(x*T+8,y*T+2,x*T+5,y*T+7,x*T+11,y*T+7);R("#6d4c41",x*T+7,y*T+12,2,4)};
+for(let y=0;y<15;y++)for(let x=0;x<W;x++)if((x==0||x==W-1||y==0||(x==14&&y<=10))&&!isP(x,y))pine(x,y);
+/* water + ledge + pier */
+R("#2b6cc4",0,16*T,256,3*T);for(let i=0;i<14;i++)R("#3f86dc",(i*37)%240,16*T+6+(i*11)%36,12,1);
+for(let x=1;x<15;x++){if(x==7||x==8)continue;R("#bdb7a6",x*T,15*T+3,T,8);R("#9e9888",x*T,15*T+11,T,5);R("#d9d3c0",x*T,15*T+3,T,2);if(x%3==1)R("#8d8776",x*T+6,15*T,3,4)}
+for(let y=15;y<=16;y++)for(let x=7;x<=8;x++){R("#a8743f",x*T,y*T,T,T);for(let k=3;k<T;k+=4)R("#7d5429",x*T,y*T+k,T,1)}
+R("#5d3b1c",7*T,15*T,2,32);R("#5d3b1c",8*T+14,15*T,2,32);
+/* decor */
+DECO.forEach(([x,y,t])=>{const X=x*T,Y=y*T;
+ if(t=="sign"){R("#6d4c41",X+7,Y+8,2,8);R("#b8b8b8",X+3,Y+3,10,7);R("#888",X+3,Y+9,10,1)}
+ if(t=="bench"){R("#9aa0a6",X+1,Y+5,14,5);R("#6b7075",X+2,Y+10,2,4);R("#6b7075",X+12,Y+10,2,4)}
+ if(t=="bush"){R("#1d6a3b",X+2,Y+1,12,15);R("#3fa14c",X+4,Y+2,6,12);R("#58bd5f",X+5,Y+3,2,6)}});
+/* mailbox */
+{const X=13*T,Y=3*T;R("#6d4c41",X+7,Y+8,2,8);R("#2f6fd6",X+2,Y+2,12,8);R("#fff",X+4,Y+5,8,1);R("#e05a47",X+12,Y,2,5)}
+/* houses */
+function house(b){const X=b.x*T,Y=b.y*T,w=b.w*T,c=b.c,dx=b.x+(b.w>>1),dy=b.y+b.h-1;
+ R("rgba(0,0,0,.2)",X+2,Y+b.h*T-2,w,4);
+ R("#b98e5c",X+2,Y+22,w-4,b.h*T-22);for(let i=0;i<5;i++)R("#a07848",X+2,Y+27+i*5,w-4,1);
+ R(c,X-3,Y,w+6,24);for(let i=0;i<6;i++)R("rgba(0,0,0,.18)",X-3,Y+3+i*4,w+6,1);
+ R("rgba(255,255,255,.3)",X-3,Y,w+6,2);R("rgba(0,0,0,.3)",X-3,Y+22,w+6,2);
+ if(b.id=="over"){R("#8d6e63",X+w-14,Y-5,6,9);R("#6d4c41",X+w-14,Y-5,6,2)}
+ const win=x=>{R("#9ad4f0",x,Y+28,9,9);R("#fff",x+4,Y+28,1,9);R("#fff",x,Y+32,9,1);R("#7a5a35",x-1,Y+37,11,2)};
+ win(X+5);win(X+w-14);if(b.w>3)win(X+22);
+ R("#5d4037",dx*T+2,dy*T+3,12,13);R(c,dx*T-1,dy*T+1,18,3);R("#ffd54f",dx*T+11,dy*T+10,2,2)}
+B.filter(b=>!b.npc&&!b.boat&&!b.mail).forEach(house);
+/* boat */
+{const X=7*T,Y=17*T;R("rgba(0,0,0,.2)",X+2,Y+27,30,3);R("#f4f4f4",X+1,Y+14,30,12);R("#e05a47",X+1,Y+20,30,3);R("#b0b8c4",X+3,Y+26,26,2);R("#f4f4f4",X+30,Y+16,2,7);
+ R("#e8e0c8",X+7,Y+6,15,9);R("#9ad4f0",X+9,Y+8,4,4);R("#9ad4f0",X+16,Y+8,4,4);R("#555",X+25,Y,1,14);R("#e05a47",X+26,Y+1,5,4)}
+/* characters */
+function ch(c,x,y,dir,hat,body,step){y-=(step?1:0);
+ c.fillStyle="rgba(0,0,0,.25)";c.fillRect(x+3,y+14,10,2);
+ c.fillStyle=hat;c.fillRect(x+3,y,10,4);if(dir=="down")c.fillRect(x+3,y+3,10,1);
+ c.fillStyle="#ffcc99";c.fillRect(x+4,y+4,8,4);c.fillStyle="#202020";
+ if(dir=="down"){c.fillRect(x+5,y+5,1,2);c.fillRect(x+10,y+5,1,2)}else if(dir=="left")c.fillRect(x+5,y+5,1,2);else if(dir=="right")c.fillRect(x+10,y+5,1,2);else{c.fillStyle=hat;c.fillRect(x+4,y+4,8,3)}
+ c.fillStyle=body;c.fillRect(x+3,y+8,10,5);c.fillStyle="#202020";c.fillRect(x+4,y+13,3,2);c.fillRect(x+9,y+13,3,2)}
+B.filter(b=>b.npc).forEach(b=>ch(m,b.x*T,b.y*T,"down",b.npc[0],b.npc[1],0));
+
+/* player */
+let px=8,py=12,dir="up",mv=null,step=0,open=false;const keys={};
+const V={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+function tryMove(d){dir=d;const[dx,dy]=V[d],nx=Math.round(px)+dx,ny=Math.round(py)+dy;
+ const dr=door[nx+","+ny];if(dr){show(dr);return}
+ if(blocked[ny][nx])return;mv={fx:px,fy:py,tx:nx,ty:ny,t:0}}
+let last=performance.now();
+function loop(now){const dt=now-last;last=now;
+ if(mv){mv.t+=dt/130;if(mv.t>=1){px=mv.tx;py=mv.ty;mv=null;step++}else{px=mv.fx+(mv.tx-mv.fx)*mv.t;py=mv.fy+(mv.ty-mv.fy)*mv.t}}
+ if(!mv&&!open)for(const d in V)if(keys[d]){tryMove(d);break}
+ ctx.drawImage(map,0,0);
+ for(let i=0;i<10;i++){if(Math.sin(now/500+i*2.1)>.7)ctx.fillStyle="#fff",ctx.fillRect((i*53+20)%236,16*T+4+(i*17)%40,2,1)}
+ ch(ctx,Math.round(px*T),Math.round(py*T),dir,"#d32f2f","#1e63c7",mv&&step%2);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+/* input */
+const KM={ArrowUp:"up",w:"up",ArrowDown:"down",s:"down",ArrowLeft:"left",a:"left",ArrowRight:"right",d:"right"};
+const kk=e=>KM[e.key.length==1?e.key.toLowerCase():e.key];
+addEventListener("keydown",e=>{const k=kk(e);if(k&&!open){keys[k]=true;e.preventDefault()}
+ if(open&&(e.key=="Escape"||e.key.toLowerCase()=="x"))hide()});
+addEventListener("keyup",e=>{const k=kk(e);if(k)keys[k]=false});
+document.querySelectorAll(".pad button").forEach(b=>{const k=b.dataset.k;
+ b.addEventListener("pointerdown",e=>{e.preventDefault();keys[k]=true});
+ ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false))});
+cv.addEventListener("click",e=>{const r=cv.getBoundingClientRect(),
+ x=Math.floor((e.clientX-r.left)/r.width*W),y=Math.floor((e.clientY-r.top)/r.height*H),b=tileB(x,y);if(b)show(b)});
+
+/* dialog */
+const dlg=document.getElementById("dlg"),dt=document.getElementById("dt"),dx=document.getElementById("dx"),db=document.getElementById("db");
+let tw=null;
+function show(b){open=true;for(const k in keys)keys[k]=false;dt.textContent=b.n;dx.textContent="";db.innerHTML="";dlg.classList.add("on");
+ let i=0;clearInterval(tw);tw=setInterval(()=>{dx.textContent=b.t.slice(0,++i);if(i>=b.t.length)clearInterval(tw)},22);
+ dlg.onclick=e=>{if(e.target.closest("a,button"))return;clearInterval(tw);dx.textContent=b.t};
+ b.l.forEach(([n,u])=>{const a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener";a.textContent=n;db.appendChild(a)});
+ const c=document.createElement("button");c.textContent="Sluiten";c.onclick=hide;db.appendChild(c)}
+function hide(){clearInterval(tw);dlg.classList.remove("on");open=false}
+</script>
+</body>
+</html>
